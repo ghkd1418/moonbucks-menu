@@ -58,10 +58,9 @@ function App() {
     const updatedMenuName = prompt('메뉴명을 입력하세요', $menuName.innerText);
     $menuName.innerText = updatedMenuName;
   };
-
+  // !FIXME: removeMenuName - confirm창 취소 눌러도 삭제됨
   const removeMenuName = e => {
-    if (confirm('정말 삭제하시겠습니까?'));
-    e.target.closest('li').remove();
+    if (confirm('정말 삭제하시겠습니까?')) e.target.closest('li').remove();
     updateMenuCount();
   };
 
