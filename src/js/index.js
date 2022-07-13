@@ -16,20 +16,64 @@
 // - [x] 총 메뉴개수 업데이트
 //
 
+//  step2 요구사항 - 상태 관리로 메뉴 관리하기
+
+// localStorage Read & Write
+// - [ ] [localStorage]에 데이터를 저장
+//  - [x] 메뉴 추가
+//  - [ ] 메뉴 수정
+//  - [ ] 메뉴 삭제
+// - [ ] 새로고침 시 localStorage 에서 데이터 읽어온다
+
+// 카테고리별 메뉴판 관리
+// - [ ] 에스프레소
+// - [ ] 프라푸치노
+// - [ ] 블렌디드
+// - [ ] 티바나
+// - [ ] 디저트
+
+// 페이지 접근시 최초 데이터 Read & Randering
+//   - [ ] localStorage 에서 데이터를 불러와서 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
+// - [ ]  에스프레소 메뉴를 페이지에 그려준다
+
+// 품절
+// - [ ] 품절 버튼을 추가
+// - [ ] 버튼 클릭시 localStorage 에 상태값 저장
+// - [ ] sold-out class 를 추가하여 상태변경
+
 import $ from './utils/dom.js';
 
+const store = {
+  setLocalStorage(menu) {
+    localStorage.setItem('menu', JSON.stringify(menu));
+  },
+  getLocalStorage() {
+    localStorage.getItem('menu');
+  },
+};
+
 function App() {
+  // 상태 : 변할 수 있는 데이터 (여기서는 메뉴명) 갯수는 굳이 관리할필요 없음
+  this.menu = [];
+
   const updateMenuCount = () => {
     const menuCount = $('#espresso-menu-list').querySelectorAll('li').length;
     $('.menu-count').innerText = `총 ${menuCount}개`;
   };
 
   const addMenuName = () => {
+    if ($('#espresso-menu-name').value == '') {
+      alert('blank');
+      return;
+    }
     const espressoMenuName = $('#espresso-menu-name').value;
-    const menuItemTemplate = espressoMenuName => {
-      return `
-      <li class="menu-list-item d-flex items-center py-2">
-      <span class="w-100 pl-2 menu-name">${espressoMenuName}</span>
+    this.menu.push({ name: espressoMenuName });
+    store.setLocalStorage(this.menu);
+    const templete = this.menu
+      .map((menuItem, index) => {
+        return `
+      <li data-menu-id = "${index}" class="menu-list-item d-flex items-center py-2">
+      <span class="w-100 pl-2 menu-name">${menuItem.name}</span>
       <button
         type="button"
         class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
@@ -43,22 +87,22 @@ function App() {
         삭제
       </button>
     </li>`;
-    };
-    if (espressoMenuName == '') {
-      alert('blank');
-      return;
-    }
-    $('#espresso-menu-list').insertAdjacentHTML('beforeend', menuItemTemplate(espressoMenuName));
+      })
+      .join('');
+
+    $('#espresso-menu-list').innerHTML = templete;
     updateMenuCount();
     $('#espresso-menu-name').value = '';
   };
 
   const updateMenuName = e => {
+    const menuId = e.target.closest('li').dataset.menuId;
     const $menuName = e.target.closest('li').querySelector('.menu-name');
     const updatedMenuName = prompt('메뉴명을 입력하세요', $menuName.innerText);
+    this.menu[menuId].name = updatedMenuName;
     $menuName.innerText = updatedMenuName;
   };
-  // !FIXME: removeMenuName - confirm창 취소 눌러도 삭제됨
+
   const removeMenuName = e => {
     if (confirm('정말 삭제하시겠습니까?')) e.target.closest('li').remove();
     updateMenuCount();
@@ -86,4 +130,4 @@ function App() {
   });
 }
 
-App();
+const app = new App();
