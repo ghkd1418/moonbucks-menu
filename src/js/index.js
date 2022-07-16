@@ -19,11 +19,11 @@
 //  step2 요구사항 - 상태 관리로 메뉴 관리하기
 
 // localStorage Read & Write
-// - [ ] [localStorage]에 데이터를 저장
+// - [x] [localStorage]에 데이터를 저장
 //  - [x] 메뉴 추가
-//  - [ ] 메뉴 수정
-//  - [ ] 메뉴 삭제
-// - [ ] 새로고침 시 localStorage 에서 데이터 읽어온다
+//  - [x] 메뉴 수정
+//  - [x] 메뉴 삭제
+// - [x] 새로고침 시 localStorage 에서 데이터 읽어온다
 
 // 카테고리별 메뉴판 관리
 // - [ ] 에스프레소
@@ -48,13 +48,45 @@ const store = {
     localStorage.setItem('menu', JSON.stringify(menu));
   },
   getLocalStorage() {
-    localStorage.getItem('menu');
+    return JSON.parse(localStorage.getItem('menu'));
   },
 };
 
 function App() {
   // 상태 : 변할 수 있는 데이터 (여기서는 메뉴명) 갯수는 굳이 관리할필요 없음
   this.menu = [];
+  this.init = () => {
+    if (store.getLocalStorage()) {
+      this.menu = store.getLocalStorage();
+    }
+    rander();
+  };
+
+  const rander = () => {
+    const templete = this.menu
+      .map((menuItem, index) => {
+        return `
+    <li data-menu-id = "${index}" class="menu-list-item d-flex items-center py-2">
+    <span class="w-100 pl-2 menu-name">${menuItem.name}</span>
+    <button
+      type="button"
+      class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
+    >
+      수정
+    </button>
+    <button
+      type="button"
+      class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
+    >
+      삭제
+    </button>
+  </li>`;
+      })
+      .join('');
+
+    $('#espresso-menu-list').innerHTML = templete;
+    updateMenuCount();
+  };
 
   const updateMenuCount = () => {
     const menuCount = $('#espresso-menu-list').querySelectorAll('li').length;
@@ -69,29 +101,7 @@ function App() {
     const espressoMenuName = $('#espresso-menu-name').value;
     this.menu.push({ name: espressoMenuName });
     store.setLocalStorage(this.menu);
-    const templete = this.menu
-      .map((menuItem, index) => {
-        return `
-      <li data-menu-id = "${index}" class="menu-list-item d-flex items-center py-2">
-      <span class="w-100 pl-2 menu-name">${menuItem.name}</span>
-      <button
-        type="button"
-        class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
-      >
-        수정
-      </button>
-      <button
-        type="button"
-        class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
-      >
-        삭제
-      </button>
-    </li>`;
-      })
-      .join('');
-
-    $('#espresso-menu-list').innerHTML = templete;
-    updateMenuCount();
+    rander();
     $('#espresso-menu-name').value = '';
   };
 
@@ -100,12 +110,18 @@ function App() {
     const $menuName = e.target.closest('li').querySelector('.menu-name');
     const updatedMenuName = prompt('메뉴명을 입력하세요', $menuName.innerText);
     this.menu[menuId].name = updatedMenuName;
+    store.setLocalStorage(this.menu);
     $menuName.innerText = updatedMenuName;
   };
 
   const removeMenuName = e => {
-    if (confirm('정말 삭제하시겠습니까?')) e.target.closest('li').remove();
-    updateMenuCount();
+    if (confirm('정말 삭제하시겠습니까?')) {
+      const menuId = e.target.closest('li').dataset.menuId;
+      this.menu.splice(menuId, 1);
+      store.setLocalStorage(this.menu);
+      e.target.closest('li').remove();
+      updateMenuCount();
+    }
   };
 
   $('#espresso-menu-list').addEventListener('click', e => {
@@ -131,3 +147,4 @@ function App() {
 }
 
 const app = new App();
+app.init();
