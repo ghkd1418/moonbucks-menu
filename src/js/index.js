@@ -26,20 +26,20 @@
 // - [x] 새로고침 시 localStorage 에서 데이터 읽어온다
 
 // 카테고리별 메뉴판 관리
-// - [ ] 에스프레소
-// - [ ] 프라푸치노
-// - [ ] 블렌디드
-// - [ ] 티바나
-// - [ ] 디저트
+// - [x] 에스프레소
+// - [x] 프라푸치노
+// - [x] 블렌디드
+// - [x] 티바나
+// - [x] 디저트
 
 // 페이지 접근시 최초 데이터 Read & Randering
-//   - [ ] localStorage 에서 데이터를 불러와서 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
-// - [ ]  에스프레소 메뉴를 페이지에 그려준다
+//   - [x] localStorage 에서 데이터를 불러와서 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
+// - [x]  에스프레소 메뉴를 페이지에 그려준다
 
 // 품절
-// - [ ] 품절 버튼을 추가
-// - [ ] 버튼 클릭시 localStorage 에 상태값 저장
-// - [ ] sold-out class 를 추가하여 상태변경
+// - [x] 품절 버튼을 추가
+// - [x] 버튼 클릭시 localStorage 에 상태값 저장
+// - [x] sold-out class 를 추가하여 상태변경
 
 import $ from './utils/dom.js';
 
@@ -75,7 +75,10 @@ function App() {
       .map((menuItem, index) => {
         return `
     <li data-menu-id = "${index}" class="menu-list-item d-flex items-center py-2">
-    <span class="w-100 pl-2 menu-name">${menuItem.name}</span>
+    <span class="w-100 pl-2 menu-name ${menuItem.soldOut ? 'sold-out' : ""}">${menuItem.name}</span>
+    <button type="button" class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button">
+      품절
+    </button>
     <button
       type="button"
       class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
@@ -132,12 +135,25 @@ function App() {
     }
   };
 
+  const soldOutMenuName = e => {
+    const menuId = e.target.closest('li').dataset.menuId;
+    this.menu[this.currenCategory][menuId].soldOut = !this.menu[this.currenCategory][menuId].soldOut;
+    store.setLocalStorage(this.menu);
+    rander();
+  }
+
   $('#menu-list').addEventListener('click', e => {
     if (e.target.classList.contains('menu-edit-button')) {
       updateMenuName(e);
+      return;
     }
     if (e.target.classList.contains('menu-remove-button')) {
       removeMenuName(e);
+      return;
+    }
+    if (e.target.classList.contains('menu-sold-out-button')) {
+      soldOutMenuName(e);
+      return;
     }
   });
 
@@ -158,7 +174,6 @@ function App() {
     if (isCategoryButton) {
       const categoryName = e.target.dataset.categoryName;
       this.currenCategory = categoryName;
-      console.log(e.target.innerText);
       $('#category-title').innerText = `${e.target.innerText} 메뉴 관리`;
       rander();
     }
