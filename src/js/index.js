@@ -46,7 +46,7 @@
 // - [ ] 서버에 새로운 메뉴가 추가될 수 있도록 요청한다.
 // - [ ] 서버에 카테고리별 메뉴리스트를 불러온다
 // - [ ] 서버에 메뉴가 수정 될 수 있도록 요청한다.
-// - [ ] 서버에 메뉴가 
+// - [ ] 서버에 메뉴가 삭제 될 수 있도록 요청한다.
 // - [ ] 
  
 // 링크에 있는 웹 서버 저장소를 clone하여 로컬에서 웹 서버를 실행시킨다.
@@ -59,6 +59,7 @@
 import $ from './utils/dom.js';
 import store from './store/index.js'
 
+const BASE_URL = "http://localhost:3000/api"
 
 function App() {
   // 상태 : 변할 수 있는 데이터 (여기서는 메뉴명) 갯수는 굳이 관리할필요 없음
@@ -113,17 +114,35 @@ function App() {
     $('.menu-count').innerText = `총 ${menuCount}개`;
   };
 
-  const addMenuName = () => {
+  const addMenuName = async() => {
     if ($('#menu-name').value == '') {
       alert('blank');
       return;
-    }
-    const espressoMenuName = $('#menu-name').value;
-    this.menu[this.currentCategory].push({ name: espressoMenuName });
-    store.setLocalStorage(this.menu);
-    rander();
-    $('#menu-name').value = '';
-  };
+    }   
+    const menuName = $('#menu-name').value;
+
+    fetch(`${BASE_URL}/category/${this.currentCategory}/menu`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({name: menuName}),
+    }).then(response =>{
+      return response.json();
+    }).then(data => {
+      console.log(data);
+    });
+
+    await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`)
+      .then(response =>{
+        return response.json();
+      }).then(data => {
+        console.log(data);
+        this.menu[this.currentCategory] = data;
+        rander();
+        $('#menu-name').value = '';
+      });
+  }
 
   const updateMenuName = e => {
     const menuId = e.target.closest('li').dataset.menuId;
