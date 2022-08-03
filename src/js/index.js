@@ -33,7 +33,7 @@
 // - [x] 디저트
 
 // 페이지 접근시 최초 데이터 Read & Randering
-//   - [x] localStorage 에서 데이터를 불러와서 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
+// - [x] localStorage 에서 데이터를 불러와서 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
 // - [x]  에스프레소 메뉴를 페이지에 그려준다
 
 // 품절
@@ -42,31 +42,45 @@
 // - [x] sold-out class 를 추가하여 상태변경
 
 // step3 요구사항 - 서버와의 통신을 통해 메뉴 관리하기
-// - [ ] 웹 서버를 띄운다.
-// - [ ] 서버에 새로운 메뉴가 추가될 수 있도록 요청한다.
+
+// TODO 서버 요청 부분
+// - [x] 웹 서버를 띄운다.
+// - [x] 서버에 새로운 메뉴가 추가될 수 있도록 요청한다.
 // - [ ] 서버에 카테고리별 메뉴리스트를 불러온다
 // - [ ] 서버에 메뉴가 수정 될 수 있도록 요청한다.
 // - [ ] 서버에 메뉴가 삭제 될 수 있도록 요청한다.
-// - [ ] 
- 
-// 링크에 있는 웹 서버 저장소를 clone하여 로컬에서 웹 서버를 실행시킨다.
-// 웹 서버를 띄워서 실제 서버에 데이터의 변경을 저장하는 형태로 리팩터링한다.
-// localStorage에 저장하는 로직은 지운다.
-// fetch 비동기 api를 사용하는 부분을 async await을 사용하여 구현한다.
-// API 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert으로 예외처리를 진행한다.
-// 중복되는 메뉴는 추가할 수 없다.
+
+// TODO 리펙터링 부분
+// - [ ] localStorage 젖아하는 로직 지우기
+// - [ ] fetch 비동기 api 사용되는 부분을 async await 를 사용하여 구현
+
+// TODO 서버 요청 부분
+// - [ ] API 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert으로 예외처리를 진행한다.
+// - [ ] 중복되는 메뉴는 추가할 수 없다.
 
 import $ from './utils/dom.js';
-import store from './store/index.js'
+import store from './store/index.js';
 
-const BASE_URL = "http://localhost:3000/api"
+const BASE_URL = 'http://localhost:3000/api';
 
 const MenuApi = {
-  async getAllMenuByCategory(category){
-    const response = await fetch(`${BASE_URL}/category/${category}/menu`)
+  async getAllMenuByCategory(category) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu`);
     return response.json();
-  }
-}
+  },
+  async createMenu(category, name) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name }),
+    });
+    if (response.ok) {
+      console.error(`error :${response}`);
+    }
+  },
+};
 
 function App() {
   // 상태 : 변할 수 있는 데이터 (여기서는 메뉴명) 갯수는 굳이 관리할필요 없음
@@ -79,10 +93,8 @@ function App() {
   };
   this.currentCategory = 'espresso';
 
-  this.init = async() => {
-    this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(
-      this.currentCategory
-    );
+  this.init = async () => {
+    this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
     rander();
     initEventListeners();
   };
@@ -92,7 +104,7 @@ function App() {
       .map((menuItem, index) => {
         return `
     <li data-menu-id = "${index}" class="menu-list-item d-flex items-center py-2">
-    <span class="w-100 pl-2 menu-name ${menuItem.soldOut ? 'sold-out' : ""}">${menuItem.name}</span>
+    <span class="w-100 pl-2 menu-name ${menuItem.soldOut ? 'sold-out' : ''}">${menuItem.name}</span>
     <button type="button" class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button">
       품절
     </button>
@@ -121,29 +133,17 @@ function App() {
     $('.menu-count').innerText = `총 ${menuCount}개`;
   };
 
-  const addMenuName = async() => {
+  const addMenuName = async () => {
     if ($('#menu-name').value == '') {
       alert('blank');
       return;
-    }   
+    }
     const menuName = $('#menu-name').value;
-
-    await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({name: menuName}),
-    }).then(response =>{
-      return response.json();
-    })
-    
-    this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(
-      this.currentCategory
-    );
+    await MenuApi.createMenu(this.currentCategory, menuName);
+    this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
     rander();
     $('#menu-name').value = '';
-  }
+  };
 
   const updateMenuName = e => {
     const menuId = e.target.closest('li').dataset.menuId;
@@ -170,7 +170,7 @@ function App() {
     rander();
   };
 
-  const initEventListeners = () =>{
+  const initEventListeners = () => {
     $('#menu-list').addEventListener('click', e => {
       if (e.target.classList.contains('menu-edit-button')) {
         updateMenuName(e);
@@ -185,29 +185,30 @@ function App() {
         return;
       }
     });
-  
+
     $('#menu-form').addEventListener('submit', e => {
       e.preventDefault();
     });
-  
+
     $('#menu-submit-button').addEventListener('click', addMenuName);
-  
+
     $('#menu-name').addEventListener('keypress', e => {
       if (e.key === 'Enter') {
         addMenuName();
       }
     });
-  
-    $('nav').addEventListener('click', e => {
+
+    $('nav').addEventListener('click', async e => {
       const isCategoryButton = e.target.classList.contains('cafe-category-name');
       if (isCategoryButton) {
         const categoryName = e.target.dataset.categoryName;
         this.currentCategory = categoryName;
         $('#category-title').innerText = `${e.target.innerText} 메뉴 관리`;
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         rander();
       }
-    })
-  };  
+    });
+  };
 }
 
 const app = new App();
