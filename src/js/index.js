@@ -76,7 +76,7 @@ const MenuApi = {
       },
       body: JSON.stringify({ name }),
     });
-    if (response.ok) {
+    if (!response.ok) {
       console.error(`error :${response}`);
     }
   },
@@ -94,6 +94,12 @@ const MenuApi = {
   async toggleSoldOutMenu(category, menuId) {
     const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}/soldout`, {
       method: 'PUT',
+    });
+    if (!response.ok) console.error('에러발생');
+  },
+  async deleteMenu(category, menuId) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`, {
+      method: 'DELETE',
     });
     if (!response.ok) console.error('에러발생');
   },
@@ -173,11 +179,13 @@ function App() {
     rander();
   };
 
-  const removeMenuName = e => {
+  const removeMenuName = async e => {
     if (confirm('정말 삭제하시겠습니까?')) {
       const menuId = e.target.closest('li').dataset.menuId;
-      this.menu[this.currentCategory].splice(menuId, 1);
-      store.setLocalStorage(this.menu);
+      await MenuApi.deleteMenu(this.currentCategory, menuId);
+      this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+      // this.menu[this.currentCategory].splice(menuId, 1);
+      // store.setLocalStorage(this.menu);
       rander();
     }
   };
