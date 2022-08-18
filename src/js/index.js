@@ -56,7 +56,7 @@
 
 // TODO 서버 요청 부분
 // - [x] API 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert으로 예외처리를 진행한다.
-// - [ ] 중복되는 메뉴는 추가할 수 없다.
+// - [x] 중복되는 메뉴는 추가할 수 없다.
 
 import $ from './utils/dom.js';
 import store from './store/index.js';
@@ -80,7 +80,6 @@ function App() {
 
   const rander = async () => {
     this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
-
     const templete = this.menu[this.currentCategory]
       .map(menuItem => {
         return `
